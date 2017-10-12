@@ -9,9 +9,12 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -66,7 +69,16 @@ public class TimeManager{
         return getDateDiff(session.start, session.stop, TimeUnit.MILLISECONDS);
     }
 
-    public void save(SlackUser user) {
+    public Collection<String> getOnClock() {
+        Set<String> onClock = new HashSet<>();
+        data.forEach((s, userData) -> {
+            if (userData.activeSession != null)
+                onClock.add(userData.name);
+        });
+        return onClock;
+    }
+
+    private void save(SlackUser user) {
         try {
             folder.mkdir();
             FileWriter writer = new FileWriter(new File(folder, user.getId() + ".json"));
@@ -80,15 +92,18 @@ public class TimeManager{
 
     }
 
-    public void load(SlackUser user) {
+    private void load(SlackUser user) {
 
         if (!data.containsKey(user.getId()))
             try {
                 data.put(user.getId(), gson.fromJson(new FileReader(new File(folder, user.getId() + ".json")), UserData.class));
                 if (data.get(user.getId()) == null)
-                    data.put(user.getId(), new UserData());
+                    data.put(user.getId(), new UserData(user.getUserName()));
+                data.get(user.getId()).name = user.getUserName();
+                if (data.get(user.getId()).workedSessions.size() >= 100)
+                    data.get(user.getId()).workedSessions.clear();
             } catch (FileNotFoundException e) {
-                data.put(user.getId(), new UserData());
+                data.put(user.getId(), new UserData(user.getUserName()));
             }
     }
 

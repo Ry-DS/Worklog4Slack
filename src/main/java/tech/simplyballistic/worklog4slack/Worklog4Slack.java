@@ -9,6 +9,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.ConsoleHandler;
@@ -54,7 +55,7 @@ public class Worklog4Slack {
                 case "-start":
                     if (!timeManager.startUser(message.getSender())) {
                         session.sendMessage(message.getChannel(), "*You are already on the clock!*");
-                    } else session.sendMessage(message.getChannel(), "You are not now on the clock! :clock12:");
+                    } else session.sendMessage(message.getChannel(), "You are now on the clock! :clock12:");
                     break;
                 case "-stop":
                     if (!timeManager.isOnClock(message.getSender())) {
@@ -64,6 +65,17 @@ public class Worklog4Slack {
                         long min = TimeUnit.MILLISECONDS.toMinutes(time);
                         long hrs = TimeUnit.MILLISECONDS.toHours(time);
                         session.sendMessage(message.getChannel(), "Stopped. You worked for " + hrs + " hours and " + (min - hrs * 60) + " min");//TODO time millis to readable format
+
+                    }
+                    break;
+                case "-onclock":
+                    Collection<String> onClock = timeManager.getOnClock();
+                    session.sendMessage(message.getChannel(), "`There are " + onClock.size() + " people on the clock`");
+
+                    if (onClock.size() > 0) {
+                        StringBuilder builder = new StringBuilder("Users on clock: ");
+                        onClock.forEach(s -> builder.append(s).append(onClock.size() == 1 ? "" : " - "));
+                        session.sendMessage(message.getChannel(), builder.toString());
 
                     }
                     break;

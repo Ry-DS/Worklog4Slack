@@ -11,10 +11,12 @@ import java.util.List;
 public class UserData {
     public List<Session> workedSessions;
     public Session activeSession;
+    public String name;
 
-    public UserData() {
+    public UserData(String name) {
         workedSessions = new ArrayList<>();
         activeSession = null;
+        this.name = name;
 
     }
 }
