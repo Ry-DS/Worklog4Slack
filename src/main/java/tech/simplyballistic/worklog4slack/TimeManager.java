@@ -15,4 +15,13 @@ public class TimeManager{
     public boolean startUser(SlackUser sender) {
         return false;
     }
+
+    public boolean isOnClock(SlackUser sender) {
+        return false;
+    }
+
+    public long stopUser(SlackUser sender) {
+
+        return 0;
+    }
 }
