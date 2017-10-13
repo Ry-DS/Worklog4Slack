@@ -125,7 +125,7 @@ public class CommandHandler implements SlackMessagePostedListener {
                             top.add(slackUser);
                     }
                     if (top.size() == 0) {
-                        session.sendMessage(message.getChannel(), "No users for that time type!");
+                        session.sendMessage(message.getChannel(), "No users for that time type! :open_mouth:");
                         return;
                     }
                     top.sort((Comparator.comparingLong(user -> timeManager.getTotalTime(user, type, TimeUnit.MILLISECONDS, last))));
