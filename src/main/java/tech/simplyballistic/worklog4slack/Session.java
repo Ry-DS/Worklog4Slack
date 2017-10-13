@@ -11,7 +11,7 @@ import java.util.Date;
 public class Session implements Serializable {
     public Date start;
     public Date stop;
-
+    public long length;
     public Session(Date start, Date stop) {
         this.start = start;
         this.stop = stop;
@@ -21,13 +21,19 @@ public class Session implements Serializable {
         this.start = start;
 
     }
+    public Session(Session session) {
+        start = new Date(session.start.getTime());
+        stop = new Date(session.stop.getTime());
+        length = session.length;
+    }
 
     public Session() {
         start = new Date();
     }
 
-    public Session(Session session) {
-        start = new Date(session.start.getTime());
-        stop = new Date(session.stop.getTime());
+    public void stop(Date date) {
+        stop = date;
+        length = date.getTime() - start.getTime();
     }
+
 }

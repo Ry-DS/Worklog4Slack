@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -23,7 +24,7 @@ import java.util.logging.SimpleFormatter;
  * @author SimplyBallistic
  */
 public class Worklog4Slack {
-    private Logger logger;
+    Logger logger;
     private SlackSession session;
     private TimeManager timeManager;
 
@@ -32,10 +33,11 @@ public class Worklog4Slack {
         initSession();
 
 
-        if (session == null) return;
+        if (session == null || !session.isConnected()) return;
         timeManager = new TimeManager(this);
         session.addMessagePostedListener(new CommandHandler(timeManager));
         session.addPresenceChangeListener(new InactivityHandler(this));
+        logger.info("Startup successful!");
 
 
 
@@ -57,23 +59,35 @@ public class Worklog4Slack {
                 SimpleDateFormat format = new SimpleDateFormat();
 
 
-                return format.format(date) + ": " + record.getMessage() + "\n";
+                return format.format(date) + ": [" + record.getLevel() + "] " + record.getMessage() + "\n";
             }
         });
         logger.addHandler(handler);
+        logger.info("Worklogger4Slack: By Ryan Samarakoon");
+        System.setOut(new PrintStream(System.out) {
+            @Override
+            public void println(Object x) {
+                logger.info(x.toString().replace("\n", ""));
+            }
+
+            @Override
+            public void println(String s) {
+                logger.info(s.replace("\n", ""));
+            }
+        });
 
     }
 
     private void initSession() {
         BufferedReader reader=null;
-
+        logger.info("Attempting connection to Slack...");
         try{
             reader=new BufferedReader(new FileReader(new File(System.getProperty("user.dir"),"slack.token")));
             String token=reader.readLine();
             logger.info("Using token: "+token);
             session = SlackSessionFactory.createWebSocketSlackSession(token);
             session.connect();
-            
+
 
         }catch(IOException|IllegalArgumentException e){
             logger.severe("Failed to connect to Slack! Did you make a file named 'slack.token' with your token?");

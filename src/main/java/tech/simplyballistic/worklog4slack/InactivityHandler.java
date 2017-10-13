@@ -68,7 +68,8 @@ public class InactivityHandler extends Thread implements PresenceChangeListener 
     public void onEvent(PresenceChange presenceChange, SlackSession slackSession) {
 
         SlackUser slackUser = slackSession.findUserById(presenceChange.getUserId());
-        if (slackUser == null)
+
+        if (slackUser == null || slackUser.isBot())
             return;
         if (!session.getTimeManager().isOnClock(slackUser))
             return;

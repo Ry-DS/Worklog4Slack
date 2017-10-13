@@ -28,11 +28,14 @@ public class TimeManager{
     private Worklog4Slack session;
     private Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private File folder = new File(System.getProperty("user.dir"), "database");
-    private Map<String, UserData> data = new HashMap<>();
+    public final Map<String, UserData> data = new HashMap<>();
 
 
     public TimeManager(Worklog4Slack session) {
         this.session = session;
+        folder.mkdir();
+        if (session != null)
+            loadAll();
 
 
     }
@@ -63,7 +66,7 @@ public class TimeManager{
         if (data.get(sender.getId()).activeSession == null)
             return -1;
         UserData userData = data.get(sender.getId());
-        userData.activeSession.stop = new Date();
+        userData.activeSession.stop(new Date());
         userData.workedSessions.add(new Session(userData.activeSession));
         Session session = userData.activeSession;
         userData.activeSession = null;
@@ -95,9 +98,10 @@ public class TimeManager{
     }
 
     private void load(SlackUser user) {
-
+        if (user == null) return;
         if (!data.containsKey(user.getId()))
             try {
+                System.out.println("Loading user: " + user.getUserName());
                 data.put(user.getId(), gson.fromJson(new FileReader(new File(folder, user.getId() + ".json")), UserData.class));
                 if (data.get(user.getId()) == null)
                     data.put(user.getId(), new UserData(user.getRealName()));
@@ -107,6 +111,17 @@ public class TimeManager{
             } catch (FileNotFoundException e) {
                 data.put(user.getId(), new UserData(user.getRealName()));
             }
+    }
+
+    private void loadAll() {
+        File[] files = folder.listFiles();
+        if (files == null) return;
+        for (File file : files) {
+            if (file.getName().contains(".")) {
+
+                load(session.getSession().findUserById(file.getName().replace(".", "-").split("-")[0]));
+            }
+        }
     }
 
     private long getDateDiff(Date date1, Date date2, TimeUnit timeUnit) {
