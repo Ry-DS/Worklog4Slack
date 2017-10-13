@@ -44,7 +44,7 @@
     </build>
     <groupId>tech.simplyballistic</groupId>
     <artifactId>worklog4slack</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.5-ALPHA</version>
     <repositories>
         <repository>
             <id>jitpack.io</id>
