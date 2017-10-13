@@ -41,7 +41,7 @@ public class InactivityHandler extends Thread implements PresenceChangeListener 
                     iterator.remove();
                     continue;
                 }
-                if (System.currentTimeMillis() - entry.getValue() > /*5 * 60 * 1000*/10000) {
+                if (System.currentTimeMillis() - entry.getValue() > 5 * 60 * 1000) {
                     long time = session.getTimeManager().stopUser(slackUser);
                     long min = TimeUnit.MILLISECONDS.toMinutes(time);
                     long hrs = TimeUnit.MILLISECONDS.toHours(time);
