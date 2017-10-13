@@ -1,6 +1,9 @@
 package tech.simplyballistic.worklog4slack;
 
+import com.ullink.slack.simpleslackapi.SlackPersona;
+import com.ullink.slack.simpleslackapi.SlackPreparedMessage;
 import com.ullink.slack.simpleslackapi.SlackSession;
+import com.ullink.slack.simpleslackapi.SlackUser;
 import com.ullink.slack.simpleslackapi.impl.SlackSessionFactory;
 
 import java.io.BufferedReader;
@@ -84,6 +87,14 @@ public class Worklog4Slack {
             }
 
 
+        });
+        session.addPresenceChangeListener((presenceChange, slackSession) -> {
+            SlackUser slackUser=slackSession.findUserById(presenceChange.getUserId());
+            if(slackUser!=null&&presenceChange.getPresence().equals(SlackPersona.SlackPresence.AWAY)&&timeManager.isOnClock(slackUser)){
+                slackSession.sendMessageToUser(slackUser,new SlackPreparedMessage.Builder().withMessage("It seems you have gone offline while on the clock! Make sure to get online or else you will " +
+                        "be off the clock in *5 minutes!*").withLinkNames(true).build());
+
+            }
         });
 
 
