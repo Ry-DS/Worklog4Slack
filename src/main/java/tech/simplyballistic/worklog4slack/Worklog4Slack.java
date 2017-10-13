@@ -2,20 +2,14 @@ package tech.simplyballistic.worklog4slack;
 
 import com.ullink.slack.simpleslackapi.SlackSession;
 import com.ullink.slack.simpleslackapi.impl.SlackSessionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 
 /**
@@ -24,7 +18,7 @@ import java.util.logging.SimpleFormatter;
  * @author SimplyBallistic
  */
 public class Worklog4Slack {
-    Logger logger;
+    private Logger logger;
     private SlackSession session;
     private TimeManager timeManager;
 
@@ -44,25 +38,8 @@ public class Worklog4Slack {
     }
 
     private void loadLogger() {
-        logger=Logger.getLogger("Worklog4Slack");
-        for(Handler iHandler:logger.getParent().getHandlers()) {
-            logger.getParent().removeHandler(iHandler);
-        }
+        logger = LoggerFactory.getLogger("Worklog4Slack");
 
-        ConsoleHandler handler=new ConsoleHandler();
-        handler.setFormatter(new SimpleFormatter(){
-            @Override
-            public String format(LogRecord record) {
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTimeInMillis(record.getMillis());
-                Date date = new Date(record.getMillis());
-                SimpleDateFormat format = new SimpleDateFormat();
-
-
-                return format.format(date) + ": [" + record.getLevel() + "] " + record.getMessage() + "\n";
-            }
-        });
-        logger.addHandler(handler);
         logger.info("Worklogger4Slack: By Ryan Samarakoon");
         System.setOut(new PrintStream(System.out) {
             @Override
@@ -90,8 +67,7 @@ public class Worklog4Slack {
 
 
         }catch(IOException|IllegalArgumentException e){
-            logger.severe("Failed to connect to Slack! Did you make a file named 'slack.token' with your token?");
-            logger.severe(e.getMessage());
+            logger.error("Failed to connect to Slack! Did you make a file named 'slack.token' with your token?", e);
         } finally {
 
             try {
@@ -113,6 +89,10 @@ public class Worklog4Slack {
 
     public TimeManager getTimeManager() {
         return timeManager;
+    }
+
+    Logger getLogger() {
+        return logger;
     }
 
     public static void main(String[] args){
