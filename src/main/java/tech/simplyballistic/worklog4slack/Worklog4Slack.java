@@ -29,7 +29,7 @@ public class Worklog4Slack {
 
         if (session == null || !session.isConnected()) return;
         timeManager = new TimeManager(this);
-        session.addMessagePostedListener(new CommandHandler(timeManager));
+        session.addMessagePostedListener(new CommandHandler(this));
         session.addPresenceChangeListener(new InactivityHandler(this));
         logger.info("Startup successful!");
 

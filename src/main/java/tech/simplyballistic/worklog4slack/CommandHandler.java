@@ -20,15 +20,17 @@ import java.util.regex.Pattern;
  * @author SimplyBallistic
  */
 public class CommandHandler implements SlackMessagePostedListener {
-    private TimeManager timeManager;
+    private Worklog4Slack slackSession;
 
-    public CommandHandler(TimeManager timeManager) {
-        this.timeManager = timeManager;
+    public CommandHandler(Worklog4Slack timeManager) {
+        this.slackSession = timeManager;
     }
 
     @Override
     public void onEvent(SlackMessagePosted message, SlackSession session) {
-        //logger.info(message.getMessageContent()+" posted by "+message.getSender().getUserName());
+        if (message.getMessageContent().startsWith("-"))
+            slackSession.getLogger().info(message.getMessageContent() + " command posted by " + message.getSender().getRealName());
+
         if (message.getMessageContent().toLowerCase().contains("hello") || message.getMessageContent().contains("<@" + session.sessionPersona().getId() + ">")) {
             session.sendMessage(message.getChannel(), "Hi there! I am Worklogger4Slack! Type -help for help");
 
@@ -44,15 +46,15 @@ public class CommandHandler implements SlackMessagePostedListener {
                         "\n *-top <tday,week,month,all>* views user leaderboard for clocked hours :trophy:");
                 break;
             case "-start":
-                if (!timeManager.startUser(message.getSender())) {
+                if (!slackSession.getTimeManager().startUser(message.getSender())) {
                     session.sendMessage(message.getChannel(), "*You are already on the clock!*");
                 } else session.sendMessage(message.getChannel(), "You are now on the clock! :clock12:");
                 break;
             case "-stop":
-                if (!timeManager.isOnClock(message.getSender())) {
+                if (!slackSession.getTimeManager().isOnClock(message.getSender())) {
                     session.sendMessage(message.getChannel(), "*You are not on the clock!*");
                 } else {
-                    long time = timeManager.stopUser(message.getSender());
+                    long time = slackSession.getTimeManager().stopUser(message.getSender());
                     long min = TimeUnit.MILLISECONDS.toMinutes(time);
                     long hrs = TimeUnit.MILLISECONDS.toHours(time);
                     session.sendMessage(message.getChannel(), "Stopped. You worked for " + hrs + " hours and " + (min - hrs * 60) + " min");
@@ -60,7 +62,7 @@ public class CommandHandler implements SlackMessagePostedListener {
                 }
                 break;
             case "-onclock":
-                Collection<String> onClock = timeManager.getOnClock();
+                Collection<String> onClock = slackSession.getTimeManager().getOnClock();
                 session.sendMessage(message.getChannel(), "`There are " + onClock.size() + " people on the clock`");
 
                 if (onClock.size() > 0) {
@@ -91,11 +93,11 @@ public class CommandHandler implements SlackMessagePostedListener {
                         session.sendMessage(message.getChannel(), "Invalid user provided!");
                         return;
                     }
-                    if (type == TimeType.CURRENT && !timeManager.isOnClock(user)) {
+                    if (type == TimeType.CURRENT && !slackSession.getTimeManager().isOnClock(user)) {
                         session.sendMessage(message.getChannel(), "User isn't on the clock to retrieve current time!");
                         return;
                     }
-                    long time = timeManager.getTotalTime(user, type, TimeUnit.MILLISECONDS, args.length > 3 && args[3].equalsIgnoreCase("last"));
+                    long time = slackSession.getTimeManager().getTotalTime(user, type, TimeUnit.MILLISECONDS, args.length > 3 && args[3].equalsIgnoreCase("last"));
                     long min = TimeUnit.MILLISECONDS.toMinutes(time);
                     long hrs = TimeUnit.MILLISECONDS.toHours(time);
                     session.sendMessage(message.getChannel(), user.getRealName() + " has worked for `" + hrs + " hours and " + (min - hrs * 60) + " min` during that time frame");
@@ -107,7 +109,7 @@ public class CommandHandler implements SlackMessagePostedListener {
                 }
                 break;
             case "-reload":
-                timeManager.reload();
+                slackSession.getTimeManager().reload();
                 session.sendMessage(message.getChannel(), "Reloaded the database :file_cabinet:");
                 break;
             case "-top":
@@ -121,16 +123,16 @@ public class CommandHandler implements SlackMessagePostedListener {
                     TimeType type = TimeType.valueOf(args[1].toUpperCase());
                     boolean last = args.length > 2 && args[2].equalsIgnoreCase("last");
                     for (SlackUser slackUser : session.getUsers()) {
-                        if (timeManager.data.containsKey(slackUser.getId()) && timeManager.getTotalTime(slackUser, type, TimeUnit.MILLISECONDS, last) > 0)
+                        if (slackSession.getTimeManager().data.containsKey(slackUser.getId()) && slackSession.getTimeManager().getTotalTime(slackUser, type, TimeUnit.MILLISECONDS, last) > 0)
                             top.add(slackUser);
                     }
                     if (top.size() == 0) {
                         session.sendMessage(message.getChannel(), "No users for that time type! :open_mouth:");
                         return;
                     }
-                    top.sort((Comparator.comparingLong(user -> timeManager.getTotalTime(user, type, TimeUnit.MILLISECONDS, last))));
+                    top.sort((Comparator.comparingLong(user -> slackSession.getTimeManager().getTotalTime(user, type, TimeUnit.MILLISECONDS, last))));
                     Collections.reverse(top);
-                    long time = timeManager.getTotalTime(top.get(0), type, TimeUnit.MILLISECONDS, args.length > 3 && args[3].equalsIgnoreCase("last"));
+                    long time = slackSession.getTimeManager().getTotalTime(top.get(0), type, TimeUnit.MILLISECONDS, args.length > 3 && args[3].equalsIgnoreCase("last"));
                     long min = TimeUnit.MILLISECONDS.toMinutes(time);
                     long hrs = TimeUnit.MILLISECONDS.toHours(time);
                     session.sendMessage(message.getChannel(), "`Leaderboard for timetype: " + args[1] + ". " + (last ? "Results are set to last" : "") + "`");
@@ -138,7 +140,7 @@ public class CommandHandler implements SlackMessagePostedListener {
                     top.remove(0);
 
                     for (int i = 0; i < top.size() && i < 5; i++) {
-                        time = timeManager.getTotalTime(top.get(i), type, TimeUnit.MILLISECONDS, args.length > 3 && args[3].equalsIgnoreCase("last"));
+                        time = slackSession.getTimeManager().getTotalTime(top.get(i), type, TimeUnit.MILLISECONDS, args.length > 3 && args[3].equalsIgnoreCase("last"));
                         min = TimeUnit.MILLISECONDS.toMinutes(time);
                         hrs = TimeUnit.MILLISECONDS.toHours(time);
                         session.sendMessage(message.getChannel(), i + 2 + ": *" + top.get(i).getRealName() + "* `" + hrs + " hrs " + (min - hrs * 60) + " min`");

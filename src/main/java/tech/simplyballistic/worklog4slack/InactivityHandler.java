@@ -41,13 +41,15 @@ public class InactivityHandler extends Thread implements PresenceChangeListener 
                     iterator.remove();
                     continue;
                 }
-                if (System.currentTimeMillis() - entry.getValue() > 5 * 60 * 1000) {
+                if (System.currentTimeMillis() - entry.getValue() > /*5 * 60 * 1000*/10000) {
                     long time = session.getTimeManager().stopUser(slackUser);
+                    long min = TimeUnit.MILLISECONDS.toMinutes(time);
+                    long hrs = TimeUnit.MILLISECONDS.toHours(time);
+                    session.getLogger().info("User " + slackUser.getRealName() + " off clock due to inactivity after " + min + " min");
                     session.getSession().getChannels().forEach(channel -> {
                         if (channel.isDirect()) return;
 
-                        long min = TimeUnit.MILLISECONDS.toMinutes(time);
-                        long hrs = TimeUnit.MILLISECONDS.toHours(time);
+
 
                         session.getSession().sendMessage(channel, "<@" + entry.getKey() + "> was taken off the clock due to inactivity after `" + hrs + " hours and " + (min - hrs * 60) + " min`");
                     });
@@ -74,11 +76,13 @@ public class InactivityHandler extends Thread implements PresenceChangeListener 
         if (!session.getTimeManager().isOnClock(slackUser))
             return;
         if (presenceChange.getPresence() == SlackPersona.SlackPresence.AWAY) {
+            session.getLogger().info("User " + slackUser.getRealName() + " away on clock");
             slackSession.sendMessageToUser(slackUser, new SlackPreparedMessage.Builder().withMessage("It seems you have gone offline while on the clock! Make sure to get online or else you will " +
                     "be off the clock in *5 minutes!* <@" + slackUser.getId() + ">").withLinkNames(true).build());
             inactiveUsers.put(slackUser.getId(), System.currentTimeMillis());
 
         } else if (presenceChange.getPresence() == SlackPersona.SlackPresence.ACTIVE && inactiveUsers.containsKey(slackUser.getId())) {
+            session.getLogger().info("User " + slackUser.getRealName() + " returned on clock");
             slackSession.sendMessageToUser(slackUser, "Thanks for jumping online! You will not be taken off the clock", null);
             inactiveUsers.remove(slackUser.getId());
         }
