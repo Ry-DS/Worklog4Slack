@@ -5,8 +5,7 @@ A Slack bot to help count and manage hours for your remote employees through a c
 2. Download the latest jar from the releases tab. 
 3. Place this jar in a new dictionary. It will generate its own files.
 4. Make a new .bat/.sh file with the following.
-```
-@echo off
+...```
 java -jar worklog4slack.jar
 ```
 5. Create a new text file and paste your token inside.
