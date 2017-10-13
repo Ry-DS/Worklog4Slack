@@ -136,7 +136,8 @@ public class CommandHandler implements SlackMessagePostedListener {
                     session.sendMessage(message.getChannel(), "`Leaderboard for timetype: " + args[1] + ". " + (last ? "Results are set to last" : "") + "`");
                     session.sendMessage(message.getChannel(), ":trophy: Top user: *" + top.get(0).getRealName() + "* :trophy: `" + hrs + " hrs " + (min - hrs * 60) + " min`");
                     top.remove(0);
-                    for (int i = 0; i < top.size(); i++) {
+
+                    for (int i = 0; i < top.size() && i < 5; i++) {
                         time = timeManager.getTotalTime(top.get(i), type, TimeUnit.MILLISECONDS, args.length > 3 && args[3].equalsIgnoreCase("last"));
                         min = TimeUnit.MILLISECONDS.toMinutes(time);
                         hrs = TimeUnit.MILLISECONDS.toHours(time);

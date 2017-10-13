@@ -44,6 +44,7 @@ public class TimeManager{
         load(sender);
         if (data.get(sender.getId()).activeSession == null) {
             data.get(sender.getId()).activeSession = new Session();
+            System.out.println("User started clock: " + sender.getRealName());
             save(sender);
             return true;
 
@@ -65,12 +66,14 @@ public class TimeManager{
         load(sender);
         if (data.get(sender.getId()).activeSession == null)
             return -1;
+
         UserData userData = data.get(sender.getId());
         userData.activeSession.stop(new Date());
         userData.workedSessions.add(new Session(userData.activeSession));
         Session session = userData.activeSession;
         userData.activeSession = null;
         save(sender);
+        System.out.println("User clock stopped: " + sender.getRealName());
         return getDateDiff(session.start, session.stop, TimeUnit.MILLISECONDS);
     }
 
@@ -90,6 +93,7 @@ public class TimeManager{
             writer.write(gson.toJson(data.get(user.getId())));
             writer.flush();
             writer.close();
+            System.out.println("Saved user file: " + user.getRealName());
             load(user);
         } catch (IOException e) {
             e.printStackTrace();

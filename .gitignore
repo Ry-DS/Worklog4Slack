@@ -24,3 +24,5 @@ hs_err_pid*
 /target/
 *.iml
 slack.token
+/artifacts/META-INF/MANIFEST.MF
+/out/
