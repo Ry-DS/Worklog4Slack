@@ -6,5 +6,5 @@ package tech.simplyballistic.worklog4slack;
  * @author SimplyBallistic
  */
 public enum TimeType {
-    ALL, CURRENT, WEEK, TDAY
+    ALL, CURRENT, WEEK, MONTH, TDAY
 }

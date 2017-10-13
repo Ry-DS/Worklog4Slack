@@ -25,7 +25,7 @@ public class CommandHandler implements SlackMessagePostedListener {
     @Override
     public void onEvent(SlackMessagePosted message, SlackSession session) {
         //logger.info(message.getMessageContent()+" posted by "+message.getSender().getUserName());
-        if (message.getMessageContent().toLowerCase().contains("hello")) {
+        if (message.getMessageContent().toLowerCase().contains("hello") || message.getMessageContent().contains("<@" + session.sessionPersona().getId() + ">")) {
             session.sendMessage(message.getChannel(), "Hi there! I am Worklogger4Slack! Type -help for help");
 
         }
@@ -35,7 +35,7 @@ public class CommandHandler implements SlackMessagePostedListener {
                 session.sendMessage(message.getChannel(), "`Help for this bot`");
                 session.sendMessage(message.getChannel(), "*-start* starts your clock :clock4:" +
                         "\n *-stop* stops your clock :alarm_clock:" +
-                        "\n *-time <user> <tday,week,all,current>* views a user's time committed :timer_clock:" +
+                        "\n *-time <user> <tday,week,month,all,current>* views a user's time committed :timer_clock:. You can add 'last' at the end to view times for last day/week/month" +
                         "\n *-onclock* views users currently on the clock :arrows_clockwise:" +
                         "\n *-most <tday,week,all>* views user leaderboard for clocked hours :trophy:");
                 break;
@@ -91,10 +91,10 @@ public class CommandHandler implements SlackMessagePostedListener {
                         session.sendMessage(message.getChannel(), "User isn't on the clock to retrieve current time!");
                         return;
                     }
-                    long time = timeManager.getTotalTime(user, type, TimeUnit.MILLISECONDS);
+                    long time = timeManager.getTotalTime(user, type, TimeUnit.MILLISECONDS, args.length > 3 && args[3].equalsIgnoreCase("last"));
                     long min = TimeUnit.MILLISECONDS.toMinutes(time);
                     long hrs = TimeUnit.MILLISECONDS.toHours(time);
-                    session.sendMessage(message.getChannel(), user.getUserName() + " has worked for `" + hrs + " hours and " + (min - hrs * 60) + " min` during that time frame");
+                    session.sendMessage(message.getChannel(), user.getRealName() + " has worked for `" + hrs + " hours and " + (min - hrs * 60) + " min` during that time frame");
 
 
                 } catch (IllegalArgumentException e) {
@@ -103,10 +103,15 @@ public class CommandHandler implements SlackMessagePostedListener {
 
                 }
                 break;
+            case "-reload":
+                timeManager.reload();
+                session.sendMessage(message.getChannel(), "Reloaded the database :file_cabinet:");
+                break;
             //TODO command manager if we make more
             default:
                 if (message.getMessageContent().startsWith("-"))
                     session.sendMessage(message.getChannel(), "Invalid command! That command doesn't exist or isn't yet implemented");
+
 
         }
 

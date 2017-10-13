@@ -1,9 +1,6 @@
 package tech.simplyballistic.worklog4slack;
 
-import com.ullink.slack.simpleslackapi.SlackPersona;
-import com.ullink.slack.simpleslackapi.SlackPreparedMessage;
 import com.ullink.slack.simpleslackapi.SlackSession;
-import com.ullink.slack.simpleslackapi.SlackUser;
 import com.ullink.slack.simpleslackapi.impl.SlackSessionFactory;
 
 import java.io.BufferedReader;
@@ -38,14 +35,8 @@ public class Worklog4Slack {
         if (session == null) return;
         timeManager = new TimeManager(this);
         session.addMessagePostedListener(new CommandHandler(timeManager));
-        session.addPresenceChangeListener((presenceChange, slackSession) -> {
-            SlackUser slackUser=slackSession.findUserById(presenceChange.getUserId());
-            if(slackUser!=null&&presenceChange.getPresence().equals(SlackPersona.SlackPresence.AWAY)&&timeManager.isOnClock(slackUser)){
-                slackSession.sendMessageToUser(slackUser,new SlackPreparedMessage.Builder().withMessage("It seems you have gone offline while on the clock! Make sure to get online or else you will " +
-                        "be off the clock in *5 minutes!*").withLinkNames(true).build());
+        session.addPresenceChangeListener(new InactivityHandler(this));
 
-            }
-        });
 
 
     }
@@ -82,6 +73,7 @@ public class Worklog4Slack {
             logger.info("Using token: "+token);
             session = SlackSessionFactory.createWebSocketSlackSession(token);
             session.connect();
+            
 
         }catch(IOException|IllegalArgumentException e){
             logger.severe("Failed to connect to Slack! Did you make a file named 'slack.token' with your token?");
@@ -105,6 +97,9 @@ public class Worklog4Slack {
         return session;
     }
 
+    public TimeManager getTimeManager() {
+        return timeManager;
+    }
 
     public static void main(String[] args){
         new Worklog4Slack();

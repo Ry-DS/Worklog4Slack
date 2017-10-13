@@ -100,12 +100,12 @@ public class TimeManager{
             try {
                 data.put(user.getId(), gson.fromJson(new FileReader(new File(folder, user.getId() + ".json")), UserData.class));
                 if (data.get(user.getId()) == null)
-                    data.put(user.getId(), new UserData(user.getUserName()));
-                data.get(user.getId()).name = user.getUserName();
+                    data.put(user.getId(), new UserData(user.getRealName()));
+                data.get(user.getId()).name = user.getRealName();
                 if (data.get(user.getId()).workedSessions.size() >= 100)
                     data.get(user.getId()).workedSessions.clear();
             } catch (FileNotFoundException e) {
-                data.put(user.getId(), new UserData(user.getUserName()));
+                data.put(user.getId(), new UserData(user.getRealName()));
             }
     }
 
@@ -113,7 +113,7 @@ public class TimeManager{
         return timeUnit.convert(date2.getTime() - date1.getTime(), TimeUnit.MILLISECONDS);
     }
 
-    public long getTotalTime(SlackUser user, TimeType type, TimeUnit unit) {
+    public long getTotalTime(SlackUser user, TimeType type, TimeUnit unit, boolean last) {
         load(user);
         if (type == TimeType.CURRENT && !isOnClock(user)) {
             return -1;
@@ -126,18 +126,26 @@ public class TimeManager{
                 return false;
             if (type == TimeType.ALL)
                 return true;
-            int timeType = Calendar.DAY_OF_YEAR;
-            if (type == TimeType.TDAY) {
-                timeType = Calendar.DAY_OF_YEAR;
-
-            } else if (type == TimeType.WEEK) {
-                timeType = Calendar.WEEK_OF_YEAR;
-
-
+            int timeType;
+            switch (type) {
+                case WEEK:
+                    timeType = Calendar.WEEK_OF_YEAR;
+                    break;
+                case TDAY:
+                    timeType = Calendar.DAY_OF_YEAR;
+                    break;
+                case MONTH:
+                    timeType = Calendar.MONTH;
+                    break;
+                default:
+                    timeType = Calendar.DAY_OF_YEAR;
             }
             Calendar calender = Calendar.getInstance();
             calender.setTime(session.stop);
-            return calender.get(timeType) == Calendar.getInstance().get(timeType) && calender.get(Calendar.YEAR) == Calendar.getInstance().get(Calendar.YEAR);
+            if (!last)
+                return calender.get(timeType) == Calendar.getInstance().get(timeType) && calender.get(Calendar.YEAR) == Calendar.getInstance().get(Calendar.YEAR);
+            else
+                return calender.get(timeType) == Calendar.getInstance().get(timeType) - 1 && calender.get(Calendar.YEAR) == Calendar.getInstance().get(Calendar.YEAR);
 
         }).collect(Collectors.toList());
         if (sessions.size() == 0)
@@ -150,5 +158,9 @@ public class TimeManager{
 
         }
         return time;
+    }
+
+    public void reload() {
+        data.clear();
     }
 }
