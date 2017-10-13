@@ -5,6 +5,6 @@ package tech.simplyballistic.worklog4slack;
  *
  * @author SimplyBallistic
  */
-public enum TimeTypes {
+public enum TimeType {
     ALL, CURRENT, WEEK, TDAY
 }

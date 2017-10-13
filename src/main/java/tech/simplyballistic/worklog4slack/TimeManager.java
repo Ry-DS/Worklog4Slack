@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Created by SimplyBallistic on 10/10/2017.
@@ -111,4 +113,42 @@ public class TimeManager{
         return timeUnit.convert(date2.getTime() - date1.getTime(), TimeUnit.MILLISECONDS);
     }
 
+    public long getTotalTime(SlackUser user, TimeType type, TimeUnit unit) {
+        load(user);
+        if (type == TimeType.CURRENT && !isOnClock(user)) {
+            return -1;
+        }
+        if (type == TimeType.CURRENT) {
+            return getDateDiff(data.get(user.getId()).activeSession.start, new Date(), unit);
+        }
+        Collection<Session> sessions = data.get(user.getId()).workedSessions.stream().filter(session -> {
+            if (session.stop == null)
+                return false;
+            if (type == TimeType.ALL)
+                return true;
+            int timeType = Calendar.DAY_OF_YEAR;
+            if (type == TimeType.TDAY) {
+                timeType = Calendar.DAY_OF_YEAR;
+
+            } else if (type == TimeType.WEEK) {
+                timeType = Calendar.WEEK_OF_YEAR;
+
+
+            }
+            Calendar calender = Calendar.getInstance();
+            calender.setTime(session.stop);
+            return calender.get(timeType) == Calendar.getInstance().get(timeType) && calender.get(Calendar.YEAR) == Calendar.getInstance().get(Calendar.YEAR);
+
+        }).collect(Collectors.toList());
+        if (sessions.size() == 0)
+            return -1;
+        long time = 0;
+        for (Session session : sessions) {
+            if (session.stop != null)
+                time += getDateDiff(session.start, session.stop, unit);
+
+
+        }
+        return time;
+    }
 }
