@@ -1,8 +1,16 @@
-# Worklog4Slac
-A WIP slack bot to help count and manage hours for your remote employees through a chat channel
+# Worklog4Slack
+A Slack bot to help count and manage hours for your remote employees through a chat channel
 ## How to use
-The bot is in a useable state at this point in time. You still will need to build it.
-You will need a dedicated place to run the program on. Once you have compiled the program, make a new text file named  `slack.token`
-You can put your API token in there in one line for the program to use. 
-Then, add the bot to the right channel andsay hello. You will get a help screen to help you get started. 
-Disclaimer: Some commands will likely not work such as leaderboards.
+1. Make a new bot for you workplace [here](https://my.slack.com/services/new/bot)
+2. Download the latest jar from the releases tab. 
+3. Place this jar in a new dictionary. It will generate its own files.
+4. Make a new .bat/.sh file with the following.
+```
+@echo off
+java -jar worklog4slack.jar
+```
+5. Create a new text file and paste your token inside.
+6. Rename the file to 'slack.token' with .token being the file extension. 
+7. Start the bot with the your script file and join your workplace.
+8. Add the bot to any channel you wish for users to use it.
+9. Say hello!
